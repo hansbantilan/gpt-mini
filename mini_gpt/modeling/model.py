@@ -60,4 +60,7 @@ def get_batch(split):
     # Return context and target
     return context, target
 
-
+# uncomment to test output of get_batch()
+#for b in range(_params.get("batch_size")):
+#    for t in range(_params.get("context_length")):
+#        print(f"when input is {context[b, :t+1].numpy()} the target {target[b,t]}")
