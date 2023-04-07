@@ -24,7 +24,7 @@ The official documentation is hosted on this repository's [wiki](), along with a
 
 ### Linux
 
-Set up a Python 3.11.2 virtual environment, then make the following local invocations from the terminal:
+Set up a Python 3.11.3 virtual environment, then make the following local invocations from the terminal:
 
 ```
 pip install -e .[linux]
