@@ -1,14 +1,14 @@
-## Mini GPT
+## GPT-mini
 
 <hr>
 
-*Hans' mini GPT codebase.*
+*GPT-mini codebase.*
 
 <br>
 
 [![Project Status: Active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 
-`mini-gpt` is a package that contains:
+`gpt-mini` is a package that contains:
 
 - Preprocessor classes
 - Model classes
@@ -45,7 +45,7 @@ pytest
 
 Running locally:
 ```
-python workflows/mini-gpt/data/preprocessing.py --dataSource=local
+python workflows/gpt-mini/data/preprocessing.py --dataSource=local
 
-python workflows/mini-gpt/model/train.py --modelType=classification --workflowMode=dev --dataSource=local --modelVersion=main_20230214
+python workflows/gpt-mini/model/train.py --modelType=classification --workflowMode=dev --dataSource=local --modelVersion=main_20230214
 ```
