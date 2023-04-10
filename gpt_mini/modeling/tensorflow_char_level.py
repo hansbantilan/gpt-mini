@@ -108,6 +108,21 @@ class _multi_headed_attention_layer(tf.keras.layers.Layer):
         attention_list = [layer(inputs) for layer in self.attention_layer_list]
         return tf.concat(attention_list, axis=-1)
 
+class _decoder_block(tf.keras.layers.Layer):
+    def __init__(self):
+        super().__init__()
+        self.multi_headed_attention_layer = _multi_headed_attention_layer()
+        self.feed_forward_layer = tf.keras.layers.Dense(units=_params["embedding_dim"], activation='relu')
+
+    def call(self, inputs):
+        '''
+        inputs here is batch_size x context_length x embedding_dim
+        returns: batch_size x context_length x embedding_dim
+        '''
+        x = self.multi_headed_attention_layer(inputs)
+        x = self.feed_forward_layer(x)
+        return x
+
 def _create_model_architecture() -> tf.keras.Model:
     '''
     returns: tf.keras.Model 
@@ -115,8 +130,7 @@ def _create_model_architecture() -> tf.keras.Model:
     inputs = tf.keras.Input(shape=_params["context_length"])
     x = tf.keras.layers.BatchNormalization()(inputs)
     x = _embedding_layer()(x)
-    x = _multi_headed_attention_layer()(x)
-    x = tf.keras.layers.Dense(units=_params["embedding_dim"], activation='relu')(x)
+    x = _decoder_block()(x)
     outputs = tf.keras.layers.Dense(units=vocab_size)(x)
     model = tf.keras.Model(inputs=inputs, outputs=outputs)
     return model
