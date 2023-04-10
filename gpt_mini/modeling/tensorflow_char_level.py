@@ -47,7 +47,7 @@ _params["context_length"] = 64 #256
 _params["embedding_dim"] = 8 #384 #note: dimension of each head is embedding_dim//num_heads
 _params["num_heads"] = 2
 _params["layer_depth"] = 6
-_params["dropout"] = 0 #0.2
+_params["dropout"] = 0.2
 _params["max_next_tokens"] = 200
 
 # uncomment to test output of _generate_batch()
@@ -80,6 +80,7 @@ class _self_attention_layer(tf.keras.layers.Layer):
         self.query_layer = tf.keras.layers.Dense(units=dim_head, use_bias=False)
         self.key_layer = tf.keras.layers.Dense(units=dim_head, use_bias=False)
         self.value_layer = tf.keras.layers.Dense(units=dim_head, use_bias=False)
+        self.dropout_layer = tf.keras.layers.Dropout(rate=_params["dropout"])
         
     def call(self, inputs):
         '''
@@ -91,6 +92,7 @@ class _self_attention_layer(tf.keras.layers.Layer):
         value = self.value_layer(inputs)
         weights = query @ tf.transpose(key, perm=[0, 2, 1]) *_params["embedding_dim"]**-0.5
         weights = tf.keras.layers.Softmax()(weights, mask=tf.cast(tf.linalg.band_part(weights, -1, 0), tf.bool))
+        weights = self.dropout_layer(weights) 
         return weights @ value
 
 class _multi_headed_attention_layer(tf.keras.layers.Layer):
@@ -99,6 +101,7 @@ class _multi_headed_attention_layer(tf.keras.layers.Layer):
         self.dim_head = _params["embedding_dim"]//_params["num_heads"]
         self.attention_layer_list = [_self_attention_layer(dim_head=self.dim_head) for _ in range(_params["num_heads"])]
         self.skip_projection = tf.keras.layers.Dense(units=_params["embedding_dim"], use_bias=False)
+        self.dropout_layer = tf.keras.layers.Dropout(rate=_params["dropout"])
 
     def call(self, inputs):
         '''
@@ -107,14 +110,17 @@ class _multi_headed_attention_layer(tf.keras.layers.Layer):
         returns: batch_size x context_length x embedding_dim
         '''
         attention_list = [layer(inputs) for layer in self.attention_layer_list]
-        concatenated_multi_headed = tf.concat(attention_list, axis=-1)
-        return self.skip_projection(concatenated_multi_headed)
+        x = tf.concat(attention_list, axis=-1)
+        x = self.skip_projection(x)
+        x = self.dropout_layer(x) 
+        return x
 
 class _feed_forward_layer(tf.keras.layers.Layer):
     def __init__(self):
         super().__init__()
         self.feed_forward = tf.keras.layers.Dense(units=4*_params["embedding_dim"], activation='relu')
         self.skip_projection = tf.keras.layers.Dense(units=_params["embedding_dim"], use_bias=False)
+        self.dropout_layer = tf.keras.layers.Dropout(rate=_params["dropout"])
 
     def call(self, inputs):
         '''
@@ -122,7 +128,8 @@ class _feed_forward_layer(tf.keras.layers.Layer):
         returns: batch_size x context_length x embedding_dim
         '''
         x = self.feed_forward(inputs)
-        return self.skip_projection(x)
+        x = self.skip_projection(x)
+        x = self.dropout_layer(x) 
         return x
 
 class _decoder_block(tf.keras.layers.Layer):
