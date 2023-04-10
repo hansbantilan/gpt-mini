@@ -38,14 +38,14 @@ for split in ["train", "validation", "test"]:
 
 # Create a dictionary called _params
 _params = dict()
-_params["epochs"] = 1000 #5000
+_params["epochs"] = 25 #5000
 _params["steps_per_epoch"] = 100
 _params["validation_steps"] = 100
 _params["learning_rate"] = 0.0001 # 0.0003
 _params["batch_size"] = 2 #64
 _params["context_length"] = 64 #256
 _params["embedding_dim"] = 8 #384 #note: dimension of each head is embedding_dim//num_heads
-_params["num_heads"] = 1
+_params["num_heads"] = 2
 _params["layer_depth"] = 1 #6
 _params["dropout"] = 0 #0.2
 _params["max_next_tokens"] = 200
