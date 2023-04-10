@@ -39,7 +39,9 @@ for split in ["train", "validation", "test"]:
 # Create a dictionary called _params
 _params = dict()
 _params["epochs"] = 10 #5000
-_params["learning_rate"] = 0.001 # 0.0003
+_params["steps_per_epoch"] = 100
+_params["validation_steps"] = 100
+_params["learning_rate"] = 0.0001 # 0.0003
 _params["batch_size"] = 2 #64
 _params["context_length"] = 4 #256
 _params["embedding_dim"] = 8 #384
@@ -47,27 +49,8 @@ _params["head_dim"] = 3 #6
 _params["layer_depth"] = 1 #6
 _params["dropout"] = 0 #0.2
 
-# Define how we get each batch
-def get_batch(split):
-    
-    # Define data as data_dict.get(split)
-    data = data_dict.get(split)
- 
-    # Extract random indices
-    shape = (_params.get("batch_size"),)
-    minval = 0
-    maxval = len(data) - _params.get("context_length")
-    dtype = tf.dtypes.int32
-    random_index_list = tf.random.uniform(shape, minval=minval, maxval=maxval, dtype=dtype)
-    
-    context = tf.stack([data[index:index+_params.get("context_length")] for index in random_index_list])
-    target = tf.stack([data[index+1:index+_params.get("context_length")+1] for index in random_index_list])
-
-    # Return context and target
-    return context, target
-
-# uncomment to test output of get_batch()
-#context, target = get_batch("train")
+# uncomment to test output of _generate_batch()
+#context, target = _generate_batch("train")
 #for b in range(_params.get("batch_size")):
 #    for t in range(_params.get("context_length")):
 #        print(f"when input is {context[b, :t+1].numpy()} the target {target[b,t]}")
@@ -121,25 +104,44 @@ def _create_model_architecture() -> tf.keras.Model:
     model = tf.keras.Model(inputs=inputs, outputs=outputs)
     return model
 
+# Define how we get each batch
+def _generate_batch(split):
+    
+    # Define data as data_dict.get(split)
+    data = data_dict.get(split)
+ 
+    # Extract random indices
+    shape = (_params.get("batch_size"),)
+    minval = 0
+    maxval = len(data) - _params.get("context_length")
+    dtype = tf.dtypes.int32
+    random_index_list = tf.random.uniform(shape, minval=minval, maxval=maxval, dtype=dtype)
+    
+    context = tf.stack([data[index:index+_params.get("context_length")] for index in random_index_list])
+    target = tf.stack([data[index+1:index+_params.get("context_length")+1] for index in random_index_list])
+
+    while True:
+        yield context, target
+
 model = _create_model_architecture()
 model.compile(
     loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
     optimizer=tf.keras.optimizers.Adam(_params["learning_rate"]),
     run_eagerly=False,
 )
-x, y = get_batch("train")
 history = model.fit(
-    x=x,
-    y=y,
+    _generate_batch("train"),
     epochs=_params["epochs"],
-    validation_data=get_batch("validation"),
+    validation_data=_generate_batch("validation"),
+    steps_per_epoch=_params["steps_per_epoch"],
+    validation_steps=_params["validation_steps"]
 )
 
 
 
-class _Mini_Language_Model(tf.keras.Model):
-    def __init__(
-        self,
-        
-    ):
-        super().__init__()
+#class _Mini_Language_Model(tf.keras.Model):
+#    def __init__(
+#        self,
+#        
+#    ):
+#        super().__init__()
