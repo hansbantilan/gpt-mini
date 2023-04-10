@@ -44,8 +44,8 @@ _params["validation_steps"] = 100
 _params["learning_rate"] = 0.0001 # 0.0003
 _params["batch_size"] = 2 #64
 _params["context_length"] = 64 #256
-_params["embedding_dim"] = 8 #384 #note: dimension of each head is embedding_dim//num_head
-_params["num_head"] = 2 #6
+_params["embedding_dim"] = 64 #note: dimension of each head is embedding_dim//num_heads
+_params["num_heads"] = 1
 _params["layer_depth"] = 1 #6
 _params["dropout"] = 0 #0.2
 _params["max_next_tokens"] = 200
@@ -57,7 +57,7 @@ _params["max_next_tokens"] = 200
 #        print(f"when input is {context[b, :t+1].numpy()} the target {target[b,t]}")
 
 #uncomment for an example of batch_size x context_length
-#inputs = tf.constant([[1,2,-1,-2], [1,2,-1,-2]])
+inputs = tf.constant([[1,2,-1,-2], [1,2,-1,-2]])
 
 class _embedding_layer(tf.keras.layers.Layer):
     def __init__(self):
@@ -75,7 +75,7 @@ class _embedding_layer(tf.keras.layers.Layer):
         return token_embedding + position_embedding
 
 class _self_attention_layer(tf.keras.layers.Layer):
-    def __init__(self, dim_head):
+    def __init__(self, dim_head: int):
         super().__init__()
         self.query_layer = tf.keras.layers.Dense(units=dim_head, use_bias=False)
         self.key_layer = tf.keras.layers.Dense(units=dim_head, use_bias=False)
@@ -84,7 +84,7 @@ class _self_attention_layer(tf.keras.layers.Layer):
     def call(self, inputs):
         '''
         inputs here is batch_size x context_length x embedding_dim
-        returns: batch_size x dim_head x dim_head
+        returns: batch_size x context_length x dim_head
         '''
         query = self.query_layer(inputs)
         key = self.key_layer(inputs)
@@ -93,16 +93,20 @@ class _self_attention_layer(tf.keras.layers.Layer):
         weights = tf.keras.layers.Softmax()(weights, mask=tf.cast(tf.linalg.band_part(weights, -1, 0), tf.bool))
         return weights @ value
 
-#class _multi_headed_attention_layer(tf.keras.layers.Layer):
-#    def __init__(self):
-#        super().__init__()
-#        self.
-#
-#    def call(self, inputs):
-#        '''
-#        inputs here is batch_size x context_length x embedding_dim
-#        returns: batch_size x dim_head x dim_head
-#        '''
+class _multi_headed_attention_layer(tf.keras.layers.Layer):
+    def __init__(self):
+        super().__init__()
+        self.dim_head = _params["embedding_dim"]//_params["num_heads"]
+        self.attention_layer_list = [_self_attention_layer(dim_head=self.dim_head) for _ in range(_params["num_heads"])]
+
+    def call(self, inputs):
+        '''
+        inputs here is batch_size x context_length x embedding_dim
+        concatenates num_heads representations each of batch_size x context_length x dim_head
+        returns: batch_size x context_length x embedding_dim
+        '''
+        attention_list = [layer(inputs) for layer in self.attention_layer_list]
+        return tf.concat(attention_list, axis=-1)
 
 def _create_model_architecture() -> tf.keras.Model:
     '''
@@ -111,7 +115,7 @@ def _create_model_architecture() -> tf.keras.Model:
     inputs = tf.keras.Input(shape=_params["context_length"])
     x = tf.keras.layers.BatchNormalization()(inputs)
     x = _embedding_layer()(x)
-    x = _self_attention_layer(dim_head=_params["embedding_dim"])(x)
+    x = _multi_headed_attention_layer()(x)
     outputs = tf.keras.layers.Dense(units=vocab_size)(x)
     model = tf.keras.Model(inputs=inputs, outputs=outputs)
     return model
