@@ -109,18 +109,33 @@ class _self_attention_layer(tf.keras.layers.Layer):
         weights = tf.keras.layers.Softmax()(weights, mask=tf.cast(tf.linalg.band_part(weights, -1, 0), tf.bool))
         return weights @ value
 
-def _transformer_decoder_block(x):
+def _create_model_architecture() -> tf.keras.Model:
     '''
-    inputs here is batch_size x context_length
-    returns: 
+    returns: tf.keras.Model 
     '''
-    x, y_true = get_batch("train")
-
+    inputs = tf.keras.Input(_params["context_length"])
+    x = tf.keras.layers.BatchNormalization()(inputs)
     x = _embedding_layer()(x)
     x = _self_attention_layer()(x)
-    y_preds = tf.keras.layers.Dense(units=vocab_size)(x)
+    outputs = tf.keras.layers.Dense(units=vocab_size)(x)
+    model = tf.keras.Model(inputs=inputs, outputs=outputs)
+    return model
 
-    tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)(y_true=y_true, y_pred=y_preds)
+model = _create_model_architecture()
+model.compile(
+    loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    optimizer=tf.keras.optimizers.Adam(_params["learning_rate"]),
+    run_eagerly=False,
+)
+x, y = get_batch("train")
+history = model.fit(
+    x=x,
+    y=y,
+    epochs=_params["epochs"],
+    validation_data=get_batch("validation"),
+)
+
+
 
 class _Mini_Language_Model(tf.keras.Model):
     def __init__(
