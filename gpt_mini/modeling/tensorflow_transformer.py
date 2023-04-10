@@ -114,7 +114,7 @@ def _generate_batch(split):
     shape = (_params.get("batch_size"),)
     minval = 0
     maxval = len(data) - _params.get("context_length")
-    dtype = tf.dtypes.int32
+    dtype = tf.dtypes.int64
     random_index_list = tf.random.uniform(shape, minval=minval, maxval=maxval, dtype=dtype)
     
     context = tf.stack([data[index:index+_params.get("context_length")] for index in random_index_list])
@@ -138,6 +138,14 @@ history = model.fit(
 )
 
 
+def _score(context: tf.Tensor, max_new_tokens: int) -> int:
+    model.predict(context)
+    logits = y_pred[:,-1,:]
+    next_index = tf.random.categorical(logits=logits, num_samples=1)
+    return tf.concat([context, next_index], axis=1)
+
+context = tf.constant([[0,1,2,3],[0,1,2,3]], dtype=tf.int64)
+decode(_score(context, max_new_tokens=10).numpy()[0].tolist())
 
 #class _Mini_Language_Model(tf.keras.Model):
 #    def __init__(
