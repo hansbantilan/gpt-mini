@@ -41,7 +41,7 @@ _params = dict()
 _params["epochs"] = 25 #5000
 _params["steps_per_epoch"] = 100
 _params["validation_steps"] = 100
-_params["learning_rate"] = 0.00005 # 0.0003
+_params["learning_rate"] = 0.00001 # 0.0003
 _params["batch_size"] = 2 #64
 _params["context_length"] = 64 #256
 _params["embedding_dim"] = 8 #384 #note: dimension of each head is embedding_dim//num_heads
@@ -130,14 +130,16 @@ class _decoder_block(tf.keras.layers.Layer):
         super().__init__()
         self.multi_headed_attention_layer = _multi_headed_attention_layer()
         self.feed_forward_layer = _feed_forward_layer()
+        self.layer_norm_1 = tf.keras.layers.LayerNormalization()
+        self.layer_norm_2 = tf.keras.layers.LayerNormalization()
 
     def call(self, inputs):
         '''
         inputs here is batch_size x context_length x embedding_dim
         returns: batch_size x context_length x embedding_dim
         '''
-        x = inputs + self.multi_headed_attention_layer(inputs)
-        x = x + self.feed_forward_layer(x)
+        x = inputs + self.multi_headed_attention_layer(self.layer_norm_1(inputs))
+        x = x + self.feed_forward_layer(self.layer_norm_2(x))
         return x
 
 def _create_model_architecture() -> tf.keras.Model:
