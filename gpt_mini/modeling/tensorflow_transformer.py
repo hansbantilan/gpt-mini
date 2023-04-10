@@ -90,9 +90,6 @@ class _embedding_layer(tf.keras.layers.Layer):
         position_embedding = self.position_embedding_layer(tf.range(inputs.shape[1]))
         return token_embedding + position_embedding
 
-#uncomment for an example of batch_size x context_length x embedding_dim
-#inputs = tf.constant([[[1,2,3,4,5,6,7,8],[2,4,6,8,16,32,64,128],[-1,-2,-3,-4,-5,-6,-7,-8],[-2,-4,-6,-8,-16,-32,-64,-128]], [[1,2,3,4,5,6,7,8],[2,4,6,8,16,32,64,128],[-1,-2,-3,-4,-5,-6,-7,-8],[-2,-4,-6,-8,-16,-32,-64,-128]]])
-
 class _self_attention_layer(tf.keras.layers.Layer):
     def __init__(self):
         super().__init__()
@@ -108,16 +105,22 @@ class _self_attention_layer(tf.keras.layers.Layer):
         query = self.query_layer(inputs)
         key = self.key_layer(inputs)
         value = self.value_layer(inputs)
-        weights = query @ tf.transpose(key, perm=[0, 2, 1])
+        weights = query @ tf.transpose(key, perm=[0, 2, 1]) *_params["embedding_dim"]**-0.5
         weights = tf.keras.layers.Softmax()(weights, mask=tf.cast(tf.linalg.band_part(weights, -1, 0), tf.bool))
         return weights @ value
 
 def _transformer_decoder_block(x):
     '''
     inputs here is batch_size x context_length
+    returns: 
     '''
+    x, y_true = get_batch("train")
+
     x = _embedding_layer()(x)
     x = _self_attention_layer()(x)
+    y_preds = tf.keras.layers.Dense(units=vocab_size)(x)
+
+    tf.keras.losses.SparseCategoricalCrossentropy()(y_true=y_true, y_pred=y_preds)
 
 class _Mini_Language_Model(tf.keras.Model):
     def __init__(
