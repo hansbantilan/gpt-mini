@@ -120,7 +120,7 @@ def _transformer_decoder_block(x):
     x = _self_attention_layer()(x)
     y_preds = tf.keras.layers.Dense(units=vocab_size)(x)
 
-    tf.keras.losses.SparseCategoricalCrossentropy()(y_true=y_true, y_pred=y_preds)
+    tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)(y_true=y_true, y_pred=y_preds)
 
 class _Mini_Language_Model(tf.keras.Model):
     def __init__(
