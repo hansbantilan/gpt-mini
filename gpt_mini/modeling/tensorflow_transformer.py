@@ -43,9 +43,10 @@ _params["steps_per_epoch"] = 100
 _params["validation_steps"] = 100
 _params["learning_rate"] = 0.0001 # 0.0003
 _params["batch_size"] = 2 #64
-_params["context_length"] = 4 #256
+_params["context_length"] = 64 #256
 _params["embedding_dim"] = 8 #384
 _params["head_dim"] = 3 #6
+_params["head_num"] = 2 #6
 _params["layer_depth"] = 1 #6
 _params["dropout"] = 0 #0.2
 
@@ -140,7 +141,7 @@ history = model.fit(
 
 def _generate(context: tf.Tensor, max_next_tokens: int) -> int:
     for _ in range(max_next_tokens):
-        model.predict(context[:,-_params["context_length"]:])
+        y_pred = model.predict(context[:,-_params["context_length"]:])
         logits = y_pred[:,-1,:]
         next_index = tf.random.categorical(logits=logits, num_samples=1, dtype=tf.int32)
         context = tf.concat([context, next_index], axis=1)
