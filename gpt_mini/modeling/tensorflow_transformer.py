@@ -138,14 +138,16 @@ history = model.fit(
 )
 
 
-def _score(context: tf.Tensor, max_new_tokens: int) -> int:
-    model.predict(context)
-    logits = y_pred[:,-1,:]
-    next_index = tf.random.categorical(logits=logits, num_samples=1)
-    return tf.concat([context, next_index], axis=1)
+def _generate(context: tf.Tensor, max_next_tokens: int) -> int:
+    for _ in range(max_next_tokens):
+        model.predict(context[:,-_params["context_length"]:])
+        logits = y_pred[:,-1,:]
+        next_index = tf.random.categorical(logits=logits, num_samples=1)
+        context = tf.concat([context, next_index], axis=1)
+    return context
 
-context = tf.constant([[0,1,2,3],[0,1,2,3]], dtype=tf.int64)
-decode(_score(context, max_new_tokens=10).numpy()[0].tolist())
+context = tf.constant([[0,32,53,1],[32,53,1,40]], dtype=tf.int64)
+decode(_generate(context, max_next_tokens=50).numpy()[0].tolist())
 
 #class _Mini_Language_Model(tf.keras.Model):
 #    def __init__(
