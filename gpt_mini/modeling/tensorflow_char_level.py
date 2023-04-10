@@ -98,6 +98,7 @@ class _multi_headed_attention_layer(tf.keras.layers.Layer):
         super().__init__()
         self.dim_head = _params["embedding_dim"]//_params["num_heads"]
         self.attention_layer_list = [_self_attention_layer(dim_head=self.dim_head) for _ in range(_params["num_heads"])]
+        self.skip_projection = tf.keras.layers.Dense(units=_params["embedding_dim"], use_bias=False)
 
     def call(self, inputs):
         '''
@@ -106,21 +107,37 @@ class _multi_headed_attention_layer(tf.keras.layers.Layer):
         returns: batch_size x context_length x embedding_dim
         '''
         attention_list = [layer(inputs) for layer in self.attention_layer_list]
-        return tf.concat(attention_list, axis=-1)
+        concatenated_multi_headed = tf.concat(attention_list, axis=-1)
+        return self.skip_projection(concatenated_multi_headed)
 
-class _decoder_block(tf.keras.layers.Layer):
+class _feed_forward_layer(tf.keras.layers.Layer):
     def __init__(self):
         super().__init__()
-        self.multi_headed_attention_layer = _multi_headed_attention_layer()
-        self.feed_forward_layer = tf.keras.layers.Dense(units=_params["embedding_dim"], activation='relu')
+        self.feed_forward = tf.keras.layers.Dense(units=_params["embedding_dim"], activation='relu')
+        self.skip_projection = tf.keras.layers.Dense(units=_params["embedding_dim"], use_bias=False)
 
     def call(self, inputs):
         '''
         inputs here is batch_size x context_length x embedding_dim
         returns: batch_size x context_length x embedding_dim
         '''
-        x = self.multi_headed_attention_layer(inputs)
-        x = self.feed_forward_layer(x)
+        x = self.feed_forward(inputs)
+        return self.skip_projection(x)
+        return x
+
+class _decoder_block(tf.keras.layers.Layer):
+    def __init__(self):
+        super().__init__()
+        self.multi_headed_attention_layer = _multi_headed_attention_layer()
+        self.feed_forward_layer = _feed_forward_layer()
+
+    def call(self, inputs):
+        '''
+        inputs here is batch_size x context_length x embedding_dim
+        returns: batch_size x context_length x embedding_dim
+        '''
+        x = inputs + self.multi_headed_attention_layer(inputs)
+        x = x + self.feed_forward_layer(x)
         return x
 
 def _create_model_architecture() -> tf.keras.Model:
