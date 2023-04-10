@@ -41,7 +41,7 @@ _params = dict()
 _params["epochs"] = 25 #5000
 _params["steps_per_epoch"] = 100
 _params["validation_steps"] = 100
-_params["learning_rate"] = 0.0001 # 0.0003
+_params["learning_rate"] = 0.00005 # 0.0003
 _params["batch_size"] = 2 #64
 _params["context_length"] = 64 #256
 _params["embedding_dim"] = 8 #384 #note: dimension of each head is embedding_dim//num_heads
@@ -113,7 +113,7 @@ class _multi_headed_attention_layer(tf.keras.layers.Layer):
 class _feed_forward_layer(tf.keras.layers.Layer):
     def __init__(self):
         super().__init__()
-        self.feed_forward = tf.keras.layers.Dense(units=_params["embedding_dim"], activation='relu')
+        self.feed_forward = tf.keras.layers.Dense(units=4*_params["embedding_dim"], activation='relu')
         self.skip_projection = tf.keras.layers.Dense(units=_params["embedding_dim"], use_bias=False)
 
     def call(self, inputs):
