@@ -46,7 +46,7 @@ _params["batch_size"] = 2 #64
 _params["context_length"] = 64 #256
 _params["embedding_dim"] = 8 #384 #note: dimension of each head is embedding_dim//num_heads
 _params["num_heads"] = 2
-_params["layer_depth"] = 1 #6
+_params["layer_depth"] = 6
 _params["dropout"] = 0 #0.2
 _params["max_next_tokens"] = 200
 
@@ -149,7 +149,9 @@ def _create_model_architecture() -> tf.keras.Model:
     inputs = tf.keras.Input(shape=_params["context_length"])
     x = tf.keras.layers.BatchNormalization()(inputs)
     x = _embedding_layer()(x)
-    x = _decoder_block()(x)
+    for _ in range(_params["layer_depth"]):
+        x = _decoder_block()(x)
+    x = tf.keras.layers.LayerNormalization()(x) 
     outputs = tf.keras.layers.Dense(units=vocab_size)(x)
     model = tf.keras.Model(inputs=inputs, outputs=outputs)
     return model
