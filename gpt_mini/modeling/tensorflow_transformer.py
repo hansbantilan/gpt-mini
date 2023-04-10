@@ -49,6 +49,7 @@ _params["head_dim"] = 3 #6
 _params["head_num"] = 2 #6
 _params["layer_depth"] = 1 #6
 _params["dropout"] = 0 #0.2
+_params["max_next_tokens"] = 200
 
 # uncomment to test output of _generate_batch()
 #context, target = _generate_batch("train")
@@ -148,7 +149,12 @@ def _generate(context: tf.Tensor, max_next_tokens: int) -> int:
     return context
 
 context = next(_generate_batch("test"))[0]
-decode(_generate(context, max_next_tokens=50).numpy()[0].tolist())
+prompt = decode(context.numpy()[0].tolist())
+response = decode(_generate(context, max_next_tokens=_params["max_next_tokens"])[:, _params["context_length"]:].numpy()[0].tolist())
+print(f"--PROMPT--\n{prompt}\n")
+print(f"--RESPONSE--\n{response}")
+
+
 
 #class _Mini_Language_Model(tf.keras.Model):
 #    def __init__(
