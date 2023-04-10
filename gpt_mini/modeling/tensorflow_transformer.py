@@ -38,8 +38,14 @@ for split in ["train", "validation", "test"]:
 
 # Create a dictionary called _params
 _params = dict()
-_params["batch_size"] = 4
-_params["context_length"] = 8
+_params["epochs"] = 10 #5000
+_params["learning_rate"] = 0.001 # 0.0003
+_params["batch_size"] = 2 #64
+_params["context_length"] = 4 #256
+_params["embedding_dim"] = 8 #384
+_params["head_dim"] = 3 #6
+_params["layer_depth"] = 1 #6
+_params["dropout"] = 0 #0.2
 
 # Define how we get each batch
 def get_batch(split):
@@ -61,7 +67,61 @@ def get_batch(split):
     return context, target
 
 # uncomment to test output of get_batch()
-context, target = get_batch("train")
-for b in range(_params.get("batch_size")):
-    for t in range(_params.get("context_length")):
-        print(f"when input is {context[b, :t+1].numpy()} the target {target[b,t]}")
+#context, target = get_batch("train")
+#for b in range(_params.get("batch_size")):
+#    for t in range(_params.get("context_length")):
+#        print(f"when input is {context[b, :t+1].numpy()} the target {target[b,t]}")
+
+#uncomment for an example of batch_size x context_length
+#inputs = tf.constant([[1,2,-1,-2], [1,2,-1,-2]])
+
+class _embedding_layer(tf.keras.layers.Layer):
+    def __init__(self):
+        super().__init__()
+        self.token_embedding_layer = tf.keras.layers.Embedding(input_dim=vocab_size, output_dim=_params["embedding_dim"])
+        self.position_embedding_layer = tf.keras.layers.Embedding(input_dim=_params["context_length"], output_dim=_params["embedding_dim"])
+        
+    def call(self, inputs):
+        '''
+        inputs here is batch_size x context_length
+        returns: batch_size x context_length x embedding_dim
+        '''
+        token_embedding = self.token_embedding_layer(inputs)
+        position_embedding = self.position_embedding_layer(tf.range(inputs.shape[1]))
+        return token_embedding + position_embedding
+
+#uncomment for an example of batch_size x context_length x embedding_dim
+#inputs = tf.constant([[[1,2,3,4,5,6,7,8],[2,4,6,8,16,32,64,128],[-1,-2,-3,-4,-5,-6,-7,-8],[-2,-4,-6,-8,-16,-32,-64,-128]], [[1,2,3,4,5,6,7,8],[2,4,6,8,16,32,64,128],[-1,-2,-3,-4,-5,-6,-7,-8],[-2,-4,-6,-8,-16,-32,-64,-128]]])
+
+class _self_attention_layer(tf.keras.layers.Layer):
+    def __init__(self):
+        super().__init__()
+        self.query_layer = tf.keras.layers.Dense(units=_params["head_dim"], use_bias=False)
+        self.key_layer = tf.keras.layers.Dense(units=_params["head_dim"], use_bias=False)
+        self.value_layer = tf.keras.layers.Dense(units=_params["head_dim"], use_bias=False)
+        
+    def call(self, inputs):
+        '''
+        inputs here is batch_size x context_length x embedding_dim
+        returns: batch_size x head_dim x head_dim
+        '''
+        query = self.query_layer(inputs)
+        key = self.key_layer(inputs)
+        value = self.value_layer(inputs)
+        weights = query @ tf.transpose(key, perm=[0, 2, 1])
+        weights = tf.keras.layers.Softmax()(weights, mask=tf.cast(tf.linalg.band_part(weights, -1, 0), tf.bool))
+        return weights @ value
+
+def _transformer_decoder_block(x):
+    '''
+    inputs here is batch_size x context_length
+    '''
+    x = _embedding_layer()(x)
+    x = _self_attention_layer()(x)
+
+class _Mini_Language_Model(tf.keras.Model):
+    def __init__(
+        self,
+        
+    ):
+        super().__init__()
