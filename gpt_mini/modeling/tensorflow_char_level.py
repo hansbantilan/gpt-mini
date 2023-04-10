@@ -116,6 +116,7 @@ def _create_model_architecture() -> tf.keras.Model:
     x = tf.keras.layers.BatchNormalization()(inputs)
     x = _embedding_layer()(x)
     x = _multi_headed_attention_layer()(x)
+    x = tf.keras.layers.Dense(units=_params["embedding_dim"], activation='relu')(x)
     outputs = tf.keras.layers.Dense(units=vocab_size)(x)
     model = tf.keras.Model(inputs=inputs, outputs=outputs)
     return model
