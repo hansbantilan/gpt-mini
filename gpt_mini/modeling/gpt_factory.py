@@ -34,6 +34,15 @@ class GptFactory:
                 self._data_source,
                 self._disable_gpu,
             )
+        elif self._model_type == "pytorch_char":
+            module = importlib.import_module("gpt_mini.modeling.pytorch_char_gpt")
+            implementation = getattr(module, "Pytorch_Char_Gpt")
+            return implementation(
+                self._model_version,
+                self._model_config,
+                self._data_source,
+                self._disable_gpu,
+            )
         else:
             raise RuntimeError("model_type must be one of {'tensorflow_char', ...}.")
 

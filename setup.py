@@ -25,6 +25,8 @@ setup(
         "linux": [
             "tensorflow==2.12.0",
             "tensorflow-datasets==4.9.0",
+            "torch==2.0.0",
+            "transformers==4.27.4",
         ],
     },
 )
