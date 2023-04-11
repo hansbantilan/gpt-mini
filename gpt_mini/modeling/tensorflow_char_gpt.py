@@ -21,6 +21,8 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "0"
 
 
 class Tensorflow_Char_Gpt(Gpt):
+    """implementation of a character-level GPT model"""
+
     def __init__(
         self,
         data_source: str = "local",
