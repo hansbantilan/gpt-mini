@@ -79,7 +79,7 @@ class Gpt(ABC):
 
     def _save_model(self, model: tf.keras.Model) -> None:
         log.info("Saving model...")
-        model.save(self._model_output_dir, include_optimizer=True, save_traces=False)
+        model.save(self._model_output_dir)
 
     def _load_model(
         self,

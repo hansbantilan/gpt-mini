@@ -222,7 +222,9 @@ class Tensorflow_Char_Gpt(Gpt):
         model = tf.keras.Model(inputs=inputs, outputs=outputs)
         return model
 
-    def _generate(context: tf.Tensor, max_next_tokens: int) -> int:
+    def _respond(
+        self, model: tf.keras.Model, context: tf.Tensor, max_next_tokens: int
+    ) -> int:
         for _ in range(max_next_tokens):
             y_pred = model.predict(context[:, -self._params["context_length"] :])
             logits = y_pred[:, -1, :]
@@ -262,10 +264,14 @@ class Tensorflow_Char_Gpt(Gpt):
 
         context, _ = next(test_generator)
         prompt = self._decode(context.numpy()[0].tolist())
+
+        model = self._load_model()
         response = self._decode(
-            _generate(context, max_next_tokens=self._params["max_next_tokens"])[
-                :, self._params["context_length"] :
-            ]
+            self._respond(
+                model=model,
+                context=context,
+                max_next_tokens=self._params["max_next_tokens"],
+            )[:, self._params["context_length"] :]
             .numpy()[0]
             .tolist()
         )

@@ -44,4 +44,5 @@ pytest
 Running locally:
 ```
 python workflows/gpt/model/train.py --dataSource=shakespeare --modelType=tensorflow_char --modelVersion=hb_20220411
+python workflows/gpt/model/score.py --dataSource=shakespeare --modelType=tensorflow_char --modelVersion=hb_20220411
 ```
