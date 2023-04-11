@@ -3,14 +3,14 @@ from glob import glob
 from setuptools import find_packages, setup
 
 setup(
-    name="mini-gpt",
+    name="gpt-mini",
     version="0.1",
     packages=find_packages(),
     url="",
     license="",
     author="",
     author_email="",
-    description="Mini GPT libraries",
+    description="GPT-mini libraries",
     setup_requires=["pytest-runner"],
     tests_require=["pytest"],
     data_files=[
