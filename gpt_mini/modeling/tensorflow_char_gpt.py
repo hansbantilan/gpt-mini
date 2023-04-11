@@ -276,4 +276,4 @@ class Tensorflow_Char_Gpt(Gpt):
             .tolist()
         )
         print(f"--PROMPT--\n{prompt}\n")
-        print(f"--RESPONSE--\n{response}")
+        print(f"--RESPONSE--\n{response}\n")
