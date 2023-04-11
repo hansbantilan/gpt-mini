@@ -1,6 +1,21 @@
 import tensorflow as tf
 import tensorflow_datasets as tfds
 
+
+# Create a dictionary called _params
+_params = dict()
+_params["epochs"] = 25 #5000
+_params["steps_per_epoch"] = 100
+_params["validation_steps"] = 100
+_params["learning_rate"] = 0.00001 #0.0003
+_params["batch_size"] = 8 #64
+_params["context_length"] = 64 #256
+_params["embedding_dim"] = 32 #384 #note: dimension of each head is embedding_dim//num_heads
+_params["num_heads"] = 2 #6
+_params["layer_depth"] = 2 #6
+_params["dropout"] = 0.2
+_params["max_next_tokens"] = 200
+
 # Load the tiny-shakespeare dataset
 dataset = tfds.load("tiny_shakespeare")
 
@@ -11,16 +26,16 @@ for split in ["train", "validation", "test"]:
         # Extract text from dataset using get()
         text_dict[split] = element.get("text").decode("utf-8")
 
-# Extract unique characters as a sorted list
-chars = sorted(list(set(text_dict.get("train"))))
-vocab_size = len(chars)
+# Construct vocabulary by extracting unique characters in the training set
+vocabulary = sorted(list(set(text_dict.get("train"))))
+vocab_size = len(vocabulary)
 
 # Create an empty dictionary to hold the character<>integer mappings
 char_to_int = {}
 int_to_char = {}
 
 # Loop through each character in the list of characters
-for i, char in enumerate(chars):
+for i, char in enumerate(vocabulary):
     # add the character and its corresponding integer to the dictionary
     char_to_int[char] = i
     int_to_char[i] = char
@@ -31,33 +46,19 @@ encode = lambda string: [char_to_int[char] for char in string]
 # Define how our tokenizer decodes from a list of integers to a string
 decode = lambda integer_list: "".join([int_to_char[i] for i in integer_list])
 
-# Cast tokenized text to a TensorFlow constant
+# Tokenize each dataset split and cast to a TensorFlow tensor
 data_dict = dict()
 for split in ["train", "validation", "test"]:
     data_dict[split] = tf.constant(encode(text_dict.get(split)))
 
-# Create a dictionary called _params
-_params = dict()
-_params["epochs"] = 25 #5000
-_params["steps_per_epoch"] = 100
-_params["validation_steps"] = 100
-_params["learning_rate"] = 0.0003
-_params["batch_size"] = 64
-_params["context_length"] = 256
-_params["embedding_dim"] = 384 #note: dimension of each head is embedding_dim//num_heads
-_params["num_heads"] = 6
-_params["layer_depth"] = 6
-_params["dropout"] = 0.2
-_params["max_next_tokens"] = 200
-
 # uncomment to test output of _generate_batch()
-#context, target = _generate_batch("train")
-#for b in range(_params.get("batch_size")):
-#    for t in range(_params.get("context_length")):
-#        print(f"when input is {context[b, :t+1].numpy()} the target {target[b,t]}")
+#context, target = next(_generate_batch("train"))
+#for batch in range(_params.get("batch_size")):
+#    for time in range(_params.get("context_length")):
+#        print(f"when input is {context[batch,:time+1].numpy()} the target {target[batch,time]}")
 
 #uncomment for an example of batch_size x context_length
-inputs = tf.constant([[1,2,-1,-2], [1,2,-1,-2]])
+#inputs = tf.constant([[1,2,-1,-2], [1,2,-1,-2]])
 
 class _embedding_layer(tf.keras.layers.Layer):
     def __init__(self):
@@ -71,7 +72,7 @@ class _embedding_layer(tf.keras.layers.Layer):
         returns: batch_size x context_length x embedding_dim
         '''
         token_embedding = self.token_embedding_layer(inputs)
-        position_embedding = self.position_embedding_layer(tf.range(inputs.shape[1]))
+        position_embedding = self.position_embedding_layer(tf.range(_params["context_length"]))
         return token_embedding + position_embedding
 
 class _self_attention_layer(tf.keras.layers.Layer):
@@ -154,8 +155,7 @@ def _create_model_architecture() -> tf.keras.Model:
     returns: tf.keras.Model 
     '''
     inputs = tf.keras.Input(shape=_params["context_length"])
-    x = tf.keras.layers.BatchNormalization()(inputs)
-    x = _embedding_layer()(x)
+    x = _embedding_layer()(inputs)
     for _ in range(_params["layer_depth"]):
         x = _decoder_block()(x)
     x = tf.keras.layers.LayerNormalization()(x) 
@@ -205,7 +205,7 @@ def _generate(context: tf.Tensor, max_next_tokens: int) -> int:
         context = tf.concat([context, next_index], axis=1)
     return context
 
-context = next(_generate_batch("test"))[0]
+context, _ = next(_generate_batch("test"))
 prompt = decode(context.numpy()[0].tolist())
 response = decode(_generate(context, max_next_tokens=_params["max_next_tokens"])[:, _params["context_length"]:].numpy()[0].tolist())
 print(f"--PROMPT--\n{prompt}\n")
