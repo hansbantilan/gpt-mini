@@ -10,10 +10,8 @@
 
 `gpt-mini` is a package that contains:
 
-- Preprocessor classes
 - Model classes
 - Workflow scripts
-- Visualization
 
 ## Documentation
 
@@ -45,7 +43,5 @@ pytest
 
 Running locally:
 ```
-python workflows/gpt-mini/data/preprocessing.py --dataSource=local
-
-python workflows/gpt-mini/model/train.py --modelType=classification --workflowMode=dev --dataSource=local --modelVersion=main_20230214
+python workflows/gpt/model/train.py --dataSource=shakespeare --modelType=tensorflow_char --modelVersion=hb_20220411
 ```

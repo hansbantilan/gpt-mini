@@ -18,6 +18,7 @@ setup(
     ],
     install_requires=[
         "pre-commit==3.2.0",
+        "matplotlib==3.7.1",
     ],
     extras_require={
         "mac": [],
