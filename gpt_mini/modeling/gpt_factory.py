@@ -8,16 +8,16 @@ class GptFactory:
 
     def __init__(
         self,
-        data_source: str,
         model_type: str,
         model_version: str,
         model_config: str,
+        data_source: str,
         disable_gpu: bool,
     ):
-        self._data_source = data_source
         self._model_type = model_type
         self._model_version = model_version
         self._model_config = model_config
+        self._data_source = data_source
         self._disable_gpu = disable_gpu
 
     def _gpt_factory(self) -> Gpt:
@@ -29,9 +29,9 @@ class GptFactory:
             module = importlib.import_module("gpt_mini.modeling.tensorflow_char_gpt")
             implementation = getattr(module, "Tensorflow_Char_Gpt")
             return implementation(
-                self._data_source,
                 self._model_version,
                 self._model_config,
+                self._data_source,
                 self._disable_gpu,
             )
         else:

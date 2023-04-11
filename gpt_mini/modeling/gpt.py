@@ -15,15 +15,15 @@ class Gpt(ABC):
 
     def __init__(
         self,
-        data_source: str,
         model_type: str,
         model_version: str,
         model_config: str,
+        data_source: str,
     ) -> None:
-        self._data_source = data_source
         self._model_type = model_type
         self._model_version = model_version
         self._model_config = model_config
+        self._data_source = data_source
 
         self._params = load_params(
             os.path.join(

@@ -17,17 +17,17 @@ curr_date = date.today().strftime("%Y%m%d")
 # scoring
 #############################################
 def main(
-    data_source: str,
     model_type: str,
     model_version: str,
     model_config: str,
+    data_source: str,
     disable_gpu: bool,
 ) -> None:
     gpt = GptFactory(
-        data_source=data_source,
         model_type=model_type,
         model_version=model_version,
         model_config=model_config,
+        data_source=data_source,
         disable_gpu=disable_gpu,
     )
     gpt.score()
@@ -36,14 +36,6 @@ def main(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run inference using a GPT model")
-    parser.add_argument(
-        "--dataSource",
-        default="local",
-        action="store",
-        dest="data_source",
-        choices=["shakespeare", "local"],
-        help="one of {shakespeare, local}",
-    )
     parser.add_argument(
         "--modelType",
         default="tensorflow_char",
@@ -65,6 +57,14 @@ if __name__ == "__main__":
         action="store",
         dest="model_config",
         help="filename of model params (e.g. default for default.yaml).",
+    )
+    parser.add_argument(
+        "--dataSource",
+        default="local",
+        action="store",
+        dest="data_source",
+        choices=["shakespeare", "local"],
+        help="one of {shakespeare, local}",
     )
     parser.add_argument(
         "--disableGPU",

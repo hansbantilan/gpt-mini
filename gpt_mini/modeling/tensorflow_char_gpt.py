@@ -5,7 +5,7 @@ import tensorflow as tf
 import tensorflow_datasets as tfds
 
 from gpt_mini.modeling.gpt import Gpt
-from gpt_mini.utility import logger
+from gpt_mini.utility import logger, well_known_paths
 
 log = logger.init("tensorflow_char")
 
@@ -25,30 +25,41 @@ class Tensorflow_Char_Gpt(Gpt):
 
     def __init__(
         self,
-        data_source: str = "local",
         model_version: str = "hb_20230411",
         model_config: str = "default",
+        data_source: str = "local",
         disable_gpu: bool = False,
     ):
         super().__init__(
-            data_source,
             "tensorflow_char",
             model_version,
             model_config,
+            data_source,
         )
         if disable_gpu:
             os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
     def _get_data(self) -> dict:
-        if self._data_source == "shakespeare":
+        text_dict = dict()
+        if self._data_source == "local":
+            for split in ["train", "validation", "test"]:
+                local_path = os.path.join(
+                    well_known_paths["DATASETS_DIR"],
+                    f"local-{split}.txt",
+                )
+                try:
+                    with open(local_path, "r") as f:
+                        text_dict[split] = f.read()
+                except:
+                    raise RuntimeError(f"missing {local_path}")
+        elif self._data_source == "shakespeare":
             dataset = tfds.load("tiny_shakespeare")
+            for split in ["train", "validation", "test"]:
+                for element in dataset.get(split).as_numpy_iterator():
+                    # Extract text from dataset using get()
+                    text_dict[split] = element.get("text").decode("utf-8")
         else:
             raise RuntimeError("data_source must be one of {'shakespeare', ...}.")
-        text_dict = dict()
-        for split in ["train", "validation", "test"]:
-            for element in dataset.get(split).as_numpy_iterator():
-                # Extract text from dataset using get()
-                text_dict[split] = element.get("text").decode("utf-8")
         return text_dict
 
     def _tokenize(self, text_dict: dict) -> dict:
