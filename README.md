@@ -43,6 +43,6 @@ pytest
 
 Running locally:
 ```
-python workflows/gpt/model/train.py --modelType=tensorflow_char --modelVersion=hb_20220411 --dataSource=shakespeare
-python workflows/gpt/model/score.py --modelType=tensorflow_char --modelVersion=hb_20220411 --dataSource=shakespeare
+python workflows/gpt/model/train.py --modelType=tensorflow_char --modelVersion=hb_20220412 --dataSource=shakespeare
+python workflows/gpt/model/score.py --modelType=tensorflow_char --modelVersion=hb_20220412 --dataSource=shakespeare
 ```

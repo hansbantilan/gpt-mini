@@ -143,44 +143,15 @@ class Tensorflow_Char_Gpt(Gpt):
             )
             return token_embedding + position_embedding
 
-    class _single_attention_layer(tf.keras.layers.Layer):
+    class _multi_headed_attention_layer(tf.keras.layers.Layer):
         def __init__(self, params: dict):
             super().__init__()
-            self.embedding_dim = params["embedding_dim"]
-            self.query_layer = tf.keras.layers.Dense(
-                units=params["dim_head"], use_bias=False
+            self.multi_attention_layer_list = (
+                [  # instantiate num_heads different self-attention heads
+                    self._single_attention_layer(params)
+                    for _ in range(params["num_heads"])
+                ]
             )
-            self.key_layer = tf.keras.layers.Dense(
-                units=params["dim_head"], use_bias=False
-            )
-            self.value_layer = tf.keras.layers.Dense(
-                units=params["dim_head"], use_bias=False
-            )
-            self.dropout_layer = tf.keras.layers.Dropout(rate=params["dropout"])
-
-        def call(self, inputs):
-            """
-            inputs here is batch_size x context_length x embedding_dim
-            returns: batch_size x context_length x dim_head
-            """
-            query = self.query_layer(inputs)
-            key = self.key_layer(inputs)
-            value = self.value_layer(inputs)
-            weights = (
-                query @ tf.transpose(key, perm=[0, 2, 1]) * self.embedding_dim**-0.5
-            )
-            weights = tf.keras.layers.Softmax()(
-                weights, mask=tf.cast(tf.linalg.band_part(weights, -1, 0), tf.bool)
-            )
-            weights = self.dropout_layer(weights)
-            return weights @ value
-
-    class _multi_headed_attention_layer(tf.keras.layers.Layer):
-        def __init__(self, params: dict, single_attention_layer: tf.keras.layers.Layer):
-            super().__init__()
-            self.multi_attention_layer_list = [
-                single_attention_layer for _ in range(params["num_heads"])
-            ]
             self.skip_projection = tf.keras.layers.Dense(
                 units=params["embedding_dim"], use_bias=False
             )
@@ -199,6 +170,40 @@ class Tensorflow_Char_Gpt(Gpt):
             x = self.skip_projection(x)
             x = self.dropout_layer(x)
             return x
+
+        class _single_attention_layer(tf.keras.layers.Layer):
+            def __init__(self, params: dict):
+                super().__init__()
+                self.embedding_dim = params["embedding_dim"]
+                self.query_layer = tf.keras.layers.Dense(
+                    units=params["dim_head"], use_bias=False
+                )
+                self.key_layer = tf.keras.layers.Dense(
+                    units=params["dim_head"], use_bias=False
+                )
+                self.value_layer = tf.keras.layers.Dense(
+                    units=params["dim_head"], use_bias=False
+                )
+                self.dropout_layer = tf.keras.layers.Dropout(rate=params["dropout"])
+
+            def call(self, inputs):
+                """
+                inputs here is batch_size x context_length x embedding_dim
+                returns: batch_size x context_length x dim_head
+                """
+                query = self.query_layer(inputs)
+                key = self.key_layer(inputs)
+                value = self.value_layer(inputs)
+                weights = (
+                    query
+                    @ tf.transpose(key, perm=[0, 2, 1])
+                    * self.embedding_dim**-0.5
+                )
+                weights = tf.keras.layers.Softmax()(
+                    weights, mask=tf.cast(tf.linalg.band_part(weights, -1, 0), tf.bool)
+                )
+                weights = self.dropout_layer(weights)
+                return weights @ value
 
     class _feed_forward_layer(tf.keras.layers.Layer):
         def __init__(self, params: dict):
@@ -225,11 +230,7 @@ class Tensorflow_Char_Gpt(Gpt):
         inputs = tf.keras.Input(shape=self._params["context_length"])
         x = self._embedding_layer(self._params, vocab_size=self._vocab_size)(inputs)
         for _ in range(self._params["layer_depth"]):  # loop over decoder blocks
-            single_attention_layer = self._single_attention_layer(self._params)
-            multi_headed_attention_layer = self._multi_headed_attention_layer(
-                self._params, single_attention_layer=single_attention_layer
-            )
-            x = x + multi_headed_attention_layer(
+            x = x + self._multi_headed_attention_layer(self._params)(
                 tf.keras.layers.LayerNormalization()(x)
             )
             x = x + self._feed_forward_layer(self._params)(
