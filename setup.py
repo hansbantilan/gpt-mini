@@ -27,6 +27,7 @@ setup(
             "tensorflow-datasets==4.9.0",
             "torch==2.0.0",
             "transformers==4.27.4",
+            "protobuf==3.20.3",
         ],
     },
 )
