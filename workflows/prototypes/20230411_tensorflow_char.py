@@ -3,18 +3,18 @@ import tensorflow_datasets as tfds
 
 # Create a dictionary called _params
 _params = dict()
-_params["epochs"] = 25  # 5000
+_params["epochs"] = 1  # 5000
 _params["steps_per_epoch"] = 100
 _params["validation_steps"] = 100
 _params["learning_rate"] = 0.00001  # 0.0003
-_params["batch_size"] = 8  # 64
-_params["context_length"] = 64  # 256
+_params["batch_size"] = 32  # 64
+_params["context_length"] = 256  # 256
 _params[
     "embedding_dim"
-] = 32  # 384 #note: dimension of each head is embedding_dim//num_heads
+] = 128  # 384 #note: dimension of each head is embedding_dim//num_heads
 _params["num_heads"] = 2  # 6
-_params["layer_depth"] = 2  # 6
-_params["dropout"] = 0.2
+_params["layer_depth"] = 6  # 6
+_params["dropout"] = 0.0
 _params["max_next_tokens"] = 200
 
 # Load the tiny-shakespeare dataset
