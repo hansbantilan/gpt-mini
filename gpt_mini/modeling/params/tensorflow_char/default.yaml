@@ -1,6 +1,6 @@
 ### model version ###
 experiment_name: "GPT-mini"
-run_name: 'tensorflow_char_gpt'
+run_name: "tensorflow_char_gpt"
 model_output_dir: "tmp/tensorflow_char_gpt"
 data_output_dir : "tmp"
 
