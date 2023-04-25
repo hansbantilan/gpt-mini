@@ -21,7 +21,14 @@ setup(
         "matplotlib==3.7.1",
     ],
     extras_require={
-        "mac": [],
+        "mac": [
+            "tensorflow-macos==2.9.2",
+            "tensorflow-metal==0.5.1",
+            "tensorflow-datasets==4.5.2",
+            "torch==2.0.0",
+            "transformers==4.27.4",
+            "protobuf==3.19.6",
+        ],
         "linux": [
             "tensorflow==2.12.0",
             "tensorflow-datasets==4.9.0",
