@@ -6,6 +6,7 @@ import tensorflow_datasets as tfds
 
 from gpt_mini.modeling.gpt import Gpt
 from gpt_mini.utility import logger, well_known_paths
+from gpt_mini.utility.plot_layer import PlotLayer
 
 log = logger.init("tensorflow_char")
 
@@ -273,7 +274,10 @@ class Tensorflow_Char_Gpt(Gpt):
             validation_steps=self._params["validation_steps"],
         )
 
-        self._plot_learning_curves(history, scalar="loss")
+        plotlayer = PlotLayer(
+            history=history, scalar="loss", model_output_dir=self._model_output_dir
+        )
+        plotlayer.plot_learning_curves()
         self._save_model(model)
 
     def score(self) -> None:
