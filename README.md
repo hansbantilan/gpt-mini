@@ -32,6 +32,18 @@ pre-commit install
 pre-commit autoupdate
 ```
 
+### Mac
+
+Set up a Python 3.10.10 virtual environment, then make the following local invocations from the terminal:
+
+```
+pip install -e .[mac]
+
+pre-commit install
+
+pre-commit autoupdate
+```
+
 ## Unit tests
 
 After installation, make the following local invocation from the terminal:
