@@ -1,8 +1,9 @@
+import errno
 import os
 
 import tensorflow_datasets as tfds
 
-from gpt_mini.utility import logger
+from gpt_mini.utility import logger, well_known_paths
 
 log = logger.init("data_layer")
 
@@ -23,7 +24,9 @@ class DataLayer:
                     with open(local_path, "r") as f:
                         text_dict[split] = f.read()
                 except:
-                    raise RuntimeError(f"missing {local_path}")
+                    raise FileNotFoundError(
+                        errno.ENOENT, os.strerror(errno.ENOENT), local_path
+                    )
         elif self._data_source == "shakespeare":
             dataset = tfds.load("tiny_shakespeare")
             for split in ["train", "validation", "test"]:
