@@ -231,10 +231,17 @@ class Tensorflow_Char_Gpt(Gpt):
             context = tf.concat([context, next_index], axis=1)
         return context
 
-    def train(self) -> None:
+    def _prepare_data(self) -> dict:
+        """
+        Prepare data outside of train/score for easier debugging
+        """
         datalayer = DataLayer(data_source=self._data_source)
         text_dict = datalayer._get_data()
         data_dict = self._tokenize(text_dict)
+        return data_dict
+
+    def train(self) -> None:
+        data_dict = self._prepare_data()
         training_generator = self._generate_batch(data_dict, split="train")
         validation_generator = self._generate_batch(data_dict, split="validation")
 
@@ -259,9 +266,7 @@ class Tensorflow_Char_Gpt(Gpt):
         self._save_model(model)
 
     def score(self) -> None:
-        datalayer = DataLayer(data_source=self._data_source)
-        text_dict = datalayer._get_data()
-        data_dict = self._tokenize(text_dict)
+        data_dict = self._prepare_data()
         test_generator = self._generate_batch(data_dict, split="test")
 
         context, _ = next(test_generator)
