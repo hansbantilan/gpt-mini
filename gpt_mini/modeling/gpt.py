@@ -1,7 +1,6 @@
 import os
 from abc import ABC, abstractmethod
 
-import matplotlib.pyplot as plt
 import tensorflow as tf
 
 from gpt_mini.utility import logger, well_known_paths
@@ -54,28 +53,6 @@ class Gpt(ABC):
         implements a specific GPT model's inference
         :returns: None
         """
-
-    def _plot_learning_curves(
-        self, history: tf.keras.callbacks.History, scalar: str
-    ) -> None:
-        loss = history.history[scalar]
-        val_loss = history.history["val_" + scalar]
-        epochs = range(len(loss))
-        plt.figure()
-        plt.plot(epochs, loss, color="navy", lw=2, label="training " + scalar)
-        plt.plot(
-            epochs, val_loss, color="darkorange", lw=2, label="validation " + scalar
-        )
-        plt.xlabel("epoch")
-        plt.ylabel(scalar)
-        plt.title(f"{scalar} per epoch")
-        plt.legend(loc="upper right")
-        log.info(f"Saving {scalar} learning curve...")
-        fig_fpath = os.path.join(self._model_output_dir, f"learning_curve_{scalar}.png")
-        plt.savefig(fig_fpath)
-        plt.show()
-        plt.clf()
-        plt.close()
 
     def _save_model(self, model: tf.keras.Model) -> None:
         log.info("Saving model...")
