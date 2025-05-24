@@ -5,7 +5,7 @@ import argparse
 from datetime import date
 
 from gpt_mini.modeling.gpt_factory import GptFactory
-from gpt_mini.utility import logger, well_known_paths
+from gpt_mini.utility import logger, WELL_KNOWN_PATHS
 
 log = logger.init("train")
 
@@ -22,7 +22,7 @@ def main(
     data_source: str,
     disable_gpu: bool,
 ) -> None:
-    f"{well_known_paths['PARAMS_DIR']}/{model_type}/{model_config}.yaml"
+    f"{WELL_KNOWN_PATHS['PARAMS_DIR']}/{model_type}/{model_config}.yaml"
 
     log.info("Initialising gpt...")
     gpt = GptFactory(

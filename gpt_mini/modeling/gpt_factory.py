@@ -23,11 +23,11 @@ class GptFactory:
     def _gpt_factory(self) -> Gpt:
         """
         non-public member function that instantiates the correct GPT model
-        :returns: an object instantiated from one of {Tensorflow_Char_Gpt, ...}
+        :returns: an object instantiated from one of {TensorflowCharGpt, ...}
         """
         if self._model_type == "tensorflow_char":
             module = importlib.import_module("gpt_mini.modeling.tensorflow_char_gpt")
-            implementation = getattr(module, "Tensorflow_Char_Gpt")
+            implementation = getattr(module, "TensorflowCharGpt")
             return implementation(
                 self._model_version,
                 self._model_config,

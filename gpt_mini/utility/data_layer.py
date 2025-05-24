@@ -3,7 +3,7 @@ import os
 
 import tensorflow_datasets as tfds
 
-from gpt_mini.utility import logger, well_known_paths
+from gpt_mini.utility import logger, WELL_KNOWN_PATHS
 
 log = logger.init("data_layer")
 
@@ -17,7 +17,7 @@ class DataLayer:
         if self._data_source == "local":
             for split in ["train", "validation", "test"]:
                 local_path = os.path.join(
-                    well_known_paths["DATASETS_DIR"],
+                    WELL_KNOWN_PATHS["DATASETS_DIR"],
                     f"local-{split}.txt",
                 )
                 try:
