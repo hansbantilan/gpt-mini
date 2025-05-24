@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 
 import tensorflow as tf
 
-from gpt_mini.utility import logger, WELL_KNOWN_PATHS
+from gpt_mini.utility import logger, well_known_paths
 from gpt_mini.utility.utility import load_params
 
 log = logger.init("gpt")
@@ -26,14 +26,14 @@ class Gpt(ABC):
 
         self._params = load_params(
             os.path.join(
-                WELL_KNOWN_PATHS["PARAMS_DIR"],
+                well_known_paths["PARAMS_DIR"],
                 model_type,
                 f"{self._model_config}.yaml",
             )
         )
 
         self._model_output_dir = os.path.join(
-            WELL_KNOWN_PATHS["ROOT"],
+            well_known_paths["ROOT"],
             self._params["model_output_dir"],
             f"model_{self._model_version}",
         )
