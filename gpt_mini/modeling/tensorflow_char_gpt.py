@@ -21,7 +21,7 @@ os.environ["TF_SYNC_ON_FINISH"] = "0"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "0"
 
 
-class Tensorflow_Char_Gpt(Gpt):
+class TensorflowCharGpt(Gpt):
     """implementation of a character-level GPT model"""
 
     def __init__(
@@ -98,7 +98,7 @@ class Tensorflow_Char_Gpt(Gpt):
         while True:
             yield context, target
 
-    class _embedding_layer(tf.keras.layers.Layer):
+    class _EmbeddingLayer(tf.keras.layers.Layer):
         def __init__(self, params: dict, vocab_size: int):
             super().__init__()
             self.context_length = params["context_length"]
@@ -121,12 +121,12 @@ class Tensorflow_Char_Gpt(Gpt):
             )
             return token_embedding + position_embedding
 
-    class _multi_headed_attention_layer(tf.keras.layers.Layer):
+    class _MultiHeadedAttentionLayer(tf.keras.layers.Layer):
         def __init__(self, params: dict):
             super().__init__()
             self.multi_attention_layer_list = (
                 [  # instantiate num_heads different self-attention heads
-                    self._single_attention_layer(params)
+                    self._SingleAttentionLayer(params)
                     for _ in range(params["num_heads"])
                 ]
             )
@@ -149,7 +149,7 @@ class Tensorflow_Char_Gpt(Gpt):
             x = self.dropout_layer(x)
             return x
 
-        class _single_attention_layer(tf.keras.layers.Layer):
+        class _SingleAttentionLayer(tf.keras.layers.Layer):
             def __init__(self, params: dict):
                 super().__init__()
                 self.embedding_dim = params["embedding_dim"]
@@ -183,7 +183,7 @@ class Tensorflow_Char_Gpt(Gpt):
                 weights = self.dropout_layer(weights)
                 return weights @ value
 
-    class _feed_forward_layer(tf.keras.layers.Layer):
+    class _FeedForwardLayer(tf.keras.layers.Layer):
         def __init__(self, params: dict):
             super().__init__()
             self.feed_forward = tf.keras.layers.Dense(
@@ -206,12 +206,12 @@ class Tensorflow_Char_Gpt(Gpt):
 
     def _create_model_architecture(self) -> tf.keras.Model:
         inputs = tf.keras.Input(shape=self._params["context_length"])
-        x = self._embedding_layer(self._params, vocab_size=self._vocab_size)(inputs)
+        x = self._EmbeddingLayer(self._params, vocab_size=self._vocab_size)(inputs)
         for _ in range(self._params["layer_depth"]):  # loop over decoder blocks
-            x = x + self._multi_headed_attention_layer(self._params)(
+            x = x + self._MultiHeadedAttentionLayer(self._params)(
                 tf.keras.layers.LayerNormalization()(x)
             )
-            x = x + self._feed_forward_layer(self._params)(
+            x = x + self._FeedForwardLayer(self._params)(
                 tf.keras.layers.LayerNormalization()(x)
             )
         x = tf.keras.layers.LayerNormalization()(x)

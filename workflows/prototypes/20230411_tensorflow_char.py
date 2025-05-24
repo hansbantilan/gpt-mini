@@ -62,7 +62,7 @@ for split in ["train", "validation", "test"]:
 # inputs = tf.constant([[1,2,-1,-2], [1,2,-1,-2]])
 
 
-class _embedding_layer(tf.keras.layers.Layer):
+class _EmbeddingLayer(tf.keras.layers.Layer):
     def __init__(self):
         super().__init__()
         self.token_embedding_layer = tf.keras.layers.Embedding(
@@ -84,7 +84,7 @@ class _embedding_layer(tf.keras.layers.Layer):
         return token_embedding + position_embedding
 
 
-class _self_attention_layer(tf.keras.layers.Layer):
+class _SelfAttentionLayer(tf.keras.layers.Layer):
     def __init__(self, dim_head: int):
         super().__init__()
         self.query_layer = tf.keras.layers.Dense(units=dim_head, use_bias=False)
@@ -110,12 +110,12 @@ class _self_attention_layer(tf.keras.layers.Layer):
         return weights @ value
 
 
-class _multi_headed_attention_layer(tf.keras.layers.Layer):
+class _MultiHeadedAttentionLayer(tf.keras.layers.Layer):
     def __init__(self):
         super().__init__()
         self.dim_head = _params["embedding_dim"] // _params["num_heads"]
         self.attention_layer_list = [
-            _self_attention_layer(dim_head=self.dim_head)
+            _SelfAttentionLayer(dim_head=self.dim_head)
             for _ in range(_params["num_heads"])
         ]
         self.skip_projection = tf.keras.layers.Dense(
@@ -136,7 +136,7 @@ class _multi_headed_attention_layer(tf.keras.layers.Layer):
         return x
 
 
-class _feed_forward_layer(tf.keras.layers.Layer):
+class _FeedForwardLayer(tf.keras.layers.Layer):
     def __init__(self):
         super().__init__()
         self.feed_forward = tf.keras.layers.Dense(
@@ -158,11 +158,11 @@ class _feed_forward_layer(tf.keras.layers.Layer):
         return x
 
 
-class _decoder_block(tf.keras.layers.Layer):
+class _DecoderBlock(tf.keras.layers.Layer):
     def __init__(self):
         super().__init__()
-        self.multi_headed_attention_layer = _multi_headed_attention_layer()
-        self.feed_forward_layer = _feed_forward_layer()
+        self.multi_headed_attention_layer = _MultiHeadedAttentionLayer()
+        self.feed_forward_layer = _FeedForwardLayer()
         self.layer_norm_1 = tf.keras.layers.LayerNormalization()
         self.layer_norm_2 = tf.keras.layers.LayerNormalization()
 
@@ -176,14 +176,14 @@ class _decoder_block(tf.keras.layers.Layer):
         return x
 
 
-def _create_model_architecture() -> tf.keras.Model:
+def create_model_architecture() -> tf.keras.Model:
     """
     returns: tf.keras.Model
     """
     inputs = tf.keras.Input(shape=_params["context_length"])
-    x = _embedding_layer()(inputs)
+    x = _EmbeddingLayer()(inputs)
     for _ in range(_params["layer_depth"]):
-        x = _decoder_block()(x)
+        x = _DecoderBlock()(x)
     x = tf.keras.layers.LayerNormalization()(x)
     outputs = tf.keras.layers.Dense(units=vocab_size)(x)
     model = tf.keras.Model(inputs=inputs, outputs=outputs)
@@ -191,7 +191,7 @@ def _create_model_architecture() -> tf.keras.Model:
 
 
 # Define how we get each batch
-def _generate_batch(split):
+def generate_batch(split):
     # Define data as data_dict.get(split)
     data = data_dict.get(split)
 
@@ -221,22 +221,22 @@ def _generate_batch(split):
         yield context, target
 
 
-model = _create_model_architecture()
+model = create_model_architecture()
 model.compile(
     loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
     optimizer=tf.keras.optimizers.Adam(_params["learning_rate"]),
     run_eagerly=False,
 )
 history = model.fit(
-    _generate_batch("train"),
+    generate_batch("train"),
     epochs=_params["epochs"],
-    validation_data=_generate_batch("validation"),
+    validation_data=generate_batch("validation"),
     steps_per_epoch=_params["steps_per_epoch"],
     validation_steps=_params["validation_steps"],
 )
 
 
-def _generate(context: tf.Tensor, max_next_tokens: int) -> int:
+def generate(context: tf.Tensor, max_next_tokens: int) -> int:
     for _ in range(max_next_tokens):
         y_pred = model.predict(context[:, -_params["context_length"] :])
         logits = y_pred[:, -1, :]
@@ -245,10 +245,10 @@ def _generate(context: tf.Tensor, max_next_tokens: int) -> int:
     return context
 
 
-context, _ = next(_generate_batch("test"))
+context, _ = next(generate_batch("test"))
 prompt = decode(context.numpy()[0].tolist())
 response = decode(
-    _generate(context, max_next_tokens=_params["max_next_tokens"])[
+    generate(context, max_next_tokens=_params["max_next_tokens"])[
         :, _params["context_length"] :
     ]
     .numpy()[0]
