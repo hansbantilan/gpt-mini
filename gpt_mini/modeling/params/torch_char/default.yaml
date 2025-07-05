@@ -1,0 +1,18 @@
+### model version ###
+experiment_name: "GPT-mini"
+run_name: "torch_char_gpt"
+model_output_dir: "tmp/torch_char_gpt"
+data_output_dir : "tmp"
+
+### model parameters ###
+epochs : 1000 #5000
+steps_per_epoch : 10
+validation_steps : 10
+learning_rate : 0.00001 #0.0003
+batch_size : 64
+context_length : 256
+embedding_dim : 32 #384 #note: dimension of each head is embedding_dim//num_heads
+num_heads : 2 #6
+layer_depth : 2 #6
+dropout : 0.2
+max_next_tokens : 200

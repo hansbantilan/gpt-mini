@@ -1,8 +1,6 @@
 import os
 from abc import ABC, abstractmethod
 
-import tensorflow as tf
-
 from gpt_mini.utility import logger, well_known_paths
 from gpt_mini.utility.utility import load_params
 
@@ -53,21 +51,3 @@ class Gpt(ABC):
         implements a specific GPT model's inference
         :returns: None
         """
-
-    def _save_model(self, model: tf.keras.Model) -> None:
-        log.info("Saving model...")
-        model.save(self._model_output_dir)
-
-    def _load_model(
-        self,
-        local_model_dir: str = None,
-        compile: bool = False,
-    ) -> tf.keras.Model:
-        """
-        compile: True = when you want to retrain the model
-        """
-        if local_model_dir is None:
-            local_model_dir = self._model_output_dir
-        log.info("Loading model...")
-        model = tf.keras.models.load_model(local_model_dir)
-        return model
