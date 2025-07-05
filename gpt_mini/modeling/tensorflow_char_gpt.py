@@ -22,7 +22,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "0"
 
 
 class TensorflowCharGpt(Gpt):
-    """implementation of a character-level GPT model"""
+    """implementation of a character-level GPT model using TensorFlow"""
 
     def __init__(
         self,
@@ -239,6 +239,24 @@ class TensorflowCharGpt(Gpt):
         text_dict = datalayer._get_data()
         data_dict = self._tokenize(text_dict)
         return data_dict
+
+    def _save_model(self, model: tf.keras.Model) -> None:
+        log.info("Saving model...")
+        model.save(self._model_output_dir)
+
+    def _load_model(
+        self,
+        local_model_dir: str = None,
+        compile: bool = False,
+    ) -> tf.keras.Model:
+        """
+        compile: True = when you want to retrain the model
+        """
+        if local_model_dir is None:
+            local_model_dir = self._model_output_dir
+        log.info("Loading model...")
+        model = tf.keras.models.load_model(local_model_dir)
+        return model
 
     def train(self) -> None:
         data_dict = self._prepare_data()
