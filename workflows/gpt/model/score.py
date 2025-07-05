@@ -41,8 +41,8 @@ if __name__ == "__main__":
         default="tensorflow_char",
         action="store",
         dest="model_type",
-        choices=["tensorflow_char", "pytorch_char"],
-        help="one of {tensorflow_char, pytorch_char}",
+        choices=["tensorflow_char", "torch_char"],
+        help="one of {tensorflow_char, torch_char}",
     )
     parser.add_argument(
         "--modelVersion",
