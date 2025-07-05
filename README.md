@@ -55,6 +55,6 @@ pytest
 
 Running locally:
 ```
-python workflows/gpt/model/train.py --modelType=torch_char --modelVersion=torch_20250705 --dataSource=shakespeare
-python workflows/gpt/model/score.py --modelType=torch_char --modelVersion=torch_20250705 --dataSource=shakespeare
+python workflows/gpt/model/train.py --modelType=torch_char --modelVersion=20250705 --dataSource=shakespeare
+python workflows/gpt/model/score.py --modelType=torch_char --modelVersion=20250705 --dataSource=shakespeare
 ```
